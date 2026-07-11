@@ -72,6 +72,7 @@ h1, h2, h3 {{
     border-radius: 6px;
     padding: 0.9rem 1.1rem;
     height: 100%;
+    box-shadow: 0 1px 3px rgba(43, 35, 32, 0.06);
 }}
 .kpi-card.positivo {{ border-left-color: {COLOR_VERDE_ALTURA}; }}
 .kpi-label {{
@@ -228,6 +229,13 @@ if not datos_anio.empty:
         margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=520,
         font_family="IBM Plex Sans", paper_bgcolor=COLOR_BG,
     )
+    fig_mapa.update_coloraxes(
+        colorbar=dict(
+            tickfont=dict(family="IBM Plex Mono", size=12, color=COLOR_INK),
+            title_font=dict(family="IBM Plex Sans", size=13, color=COLOR_INK),
+            outlinewidth=0,
+        )
+    )
     st.plotly_chart(fig_mapa, use_container_width=True)
 else:
     st.info("Prueba con otro año o indicador.")
@@ -258,7 +266,8 @@ if deptos_sel:
             labels={metrica_col: metrica_label, "anio": "Año", "departamento": "Departamento"},
         )
         fig_series.update_layout(height=420, legend_title_text="", font_family="IBM Plex Sans", paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_SURFACE)
-        fig_series.update_xaxes(range=[anio_min_serie - 0.5, anio_max_serie + 0.5])
+        fig_series.update_xaxes(range=[anio_min_serie - 0.5, anio_max_serie + 0.5], tickfont=dict(family="IBM Plex Mono"), gridcolor=COLOR_LINEA)
+        fig_series.update_yaxes(tickfont=dict(family="IBM Plex Mono"), gridcolor=COLOR_LINEA)
         st.plotly_chart(fig_series, use_container_width=True)
 else:
     st.info("Selecciona uno o más departamentos en la barra lateral para ver su evolución.")
@@ -289,6 +298,8 @@ if not datos_scatter.empty:
     )
     fig_scatter.update_traces(marker=dict(size=11, line=dict(width=0.5, color="white")))
     fig_scatter.update_layout(height=440, legend_title_text="Región natural", font_family="IBM Plex Sans", paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_SURFACE)
+    fig_scatter.update_xaxes(tickfont=dict(family="IBM Plex Mono"), gridcolor=COLOR_LINEA)
+    fig_scatter.update_yaxes(tickfont=dict(family="IBM Plex Mono"), gridcolor=COLOR_LINEA)
     st.plotly_chart(fig_scatter, use_container_width=True)
 else:
     st.info(f"No hay suficientes datos para graficar {anio_sel}.")
