@@ -13,22 +13,21 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------------------------
-# DISEÑO — "cuaderno de campo estadístico andino"
+# DISEÑO — modo oscuro, paleta "Royal Plum"
 # ---------------------------------------------------------------------------
-COLOR_BG = "#FAF8F3"
-COLOR_SURFACE = "#FFFFFF"
-COLOR_INK = "#2B2320"
-COLOR_INK_SOFT = "#6B5F55"
-COLOR_COCHINILLA = "#A23B2E"   # acento principal / negativo
-COLOR_VERDE_ALTURA = "#1F5C4F"  # positivo
-COLOR_ACHIOTE = "#C97A2B"      # terciario
-COLOR_LINEA = "#E4DACB"
+COLOR_BG = "#050404"          # Black
+COLOR_SURFACE = "#2E1C2B"     # Midnight Violet
+COLOR_SURFACE_ALT = "#4A1942"  # Blackberry Cream
+COLOR_INK = "#EAEAEA"         # Alabaster Grey
+COLOR_INK_SOFT = "#B9AEB4"
+COLOR_ACCENT = "#893168"      # Royal Plum — acento principal
+COLOR_LINEA = "#4A1942"
 
 ESCALA_ROJO_VERDE = [
-    [0.0, COLOR_COCHINILLA], [0.5, "#F4E9C9"], [1.0, COLOR_VERDE_ALTURA]
+    [0.0, COLOR_SURFACE_ALT], [0.5, COLOR_ACCENT], [1.0, COLOR_INK]
 ]
 ESCALA_SOLO_ROJO = [
-    [0.0, "#F4E9C9"], [1.0, COLOR_COCHINILLA]
+    [0.0, COLOR_INK], [1.0, COLOR_ACCENT]
 ]
 
 st.markdown(f"""
@@ -44,7 +43,10 @@ html, body, [class*="css"] {{
 }}
 [data-testid="stSidebar"] {{
     background-color: {COLOR_SURFACE};
-    border-right: 1px solid {COLOR_LINEA};
+    border-right: 1px solid {COLOR_SURFACE_ALT};
+}}
+[data-testid="stSidebar"] * {{
+    color: {COLOR_INK} !important;
 }}
 h1, h2, h3 {{
     font-family: 'Fraunces', serif !important;
@@ -52,59 +54,67 @@ h1, h2, h3 {{
     color: {COLOR_INK} !important;
     letter-spacing: -0.01em;
 }}
+p, span, label, .stCaption, [data-testid="stCaptionContainer"] {{
+    color: {COLOR_INK_SOFT} !important;
+}}
 .faja {{
     height: 8px;
     width: 100%;
     margin: -1rem 0 1.75rem 0;
     background: repeating-linear-gradient(
         90deg,
-        {COLOR_COCHINILLA} 0px, {COLOR_COCHINILLA} 28px,
-        {COLOR_ACHIOTE} 28px, {COLOR_ACHIOTE} 48px,
-        {COLOR_VERDE_ALTURA} 48px, {COLOR_VERDE_ALTURA} 68px,
-        {COLOR_INK} 68px, {COLOR_INK} 72px
+        {COLOR_ACCENT} 0px, {COLOR_ACCENT} 28px,
+        {COLOR_SURFACE_ALT} 28px, {COLOR_SURFACE_ALT} 48px,
+        {COLOR_INK} 48px, {COLOR_INK} 68px,
+        {COLOR_BG} 68px, {COLOR_BG} 72px
     );
     border-radius: 2px;
 }}
 .kpi-card {{
     background: {COLOR_SURFACE};
-    border: 1px solid {COLOR_LINEA};
-    border-left: 3px solid {COLOR_COCHINILLA};
+    border: 1px solid {COLOR_SURFACE_ALT};
+    border-left: 3px solid {COLOR_ACCENT};
     border-radius: 6px;
     padding: 0.9rem 1.1rem;
     height: 100%;
-    box-shadow: 0 1px 3px rgba(43, 35, 32, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }}
-.kpi-card.positivo {{ border-left-color: {COLOR_VERDE_ALTURA}; }}
+.kpi-card.positivo {{ border-left-color: {COLOR_INK}; }}
 .kpi-label {{
     font-family: 'IBM Plex Sans', sans-serif;
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: {COLOR_INK_SOFT};
+    color: {COLOR_INK_SOFT} !important;
     margin-bottom: 0.3rem;
 }}
 .kpi-value {{
     font-family: 'IBM Plex Mono', monospace;
     font-size: 1.5rem;
     font-weight: 600;
-    color: {COLOR_INK};
+    color: {COLOR_INK} !important;
     line-height: 1.15;
 }}
 .kpi-sub {{
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.85rem;
-    color: {COLOR_INK_SOFT};
+    color: {COLOR_INK_SOFT} !important;
     margin-top: 0.15rem;
 }}
 [data-testid="stMetricValue"], .stDataFrame, .stDataFrame * {{
     font-family: 'IBM Plex Mono', monospace !important;
 }}
 .stButton>button, .stDownloadButton>button {{
-    background-color: {COLOR_COCHINILLA};
-    color: white;
+    background-color: {COLOR_ACCENT};
+    color: {COLOR_INK};
     border: none;
 }}
-hr {{ border-color: {COLOR_LINEA} !important; }}
+hr {{ border-color: {COLOR_SURFACE_ALT} !important; }}
+[data-testid="stExpander"] {{
+    background-color: {COLOR_SURFACE};
+    border: 1px solid {COLOR_SURFACE_ALT};
+    border-radius: 6px;
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -224,10 +234,11 @@ if not datos_anio.empty:
         },
         labels={metrica_col: metrica_label},
     )
-    fig_mapa.update_geos(fitbounds="locations", visible=False)
+    fig_mapa.update_geos(fitbounds="locations", visible=False, bgcolor=COLOR_BG)
     fig_mapa.update_layout(
         margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=520,
-        font_family="IBM Plex Sans", paper_bgcolor=COLOR_BG,
+        font=dict(family="IBM Plex Sans", color=COLOR_INK),
+        paper_bgcolor=COLOR_BG,
     )
     fig_mapa.update_coloraxes(
         colorbar=dict(
@@ -262,12 +273,12 @@ if deptos_sel:
             y=metrica_col,
             color="departamento",
             markers=True,
-            color_discrete_sequence=[COLOR_COCHINILLA, COLOR_VERDE_ALTURA, COLOR_ACHIOTE, COLOR_INK, "#7A8C8A"],
+            color_discrete_sequence=[COLOR_ACCENT, COLOR_INK, "#C9799F", COLOR_SURFACE_ALT, "#7A6070"],
             labels={metrica_col: metrica_label, "anio": "Año", "departamento": "Departamento"},
         )
-        fig_series.update_layout(height=420, legend_title_text="", font_family="IBM Plex Sans", paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_SURFACE)
-        fig_series.update_xaxes(range=[anio_min_serie - 0.5, anio_max_serie + 0.5], tickfont=dict(family="IBM Plex Mono"), gridcolor=COLOR_LINEA)
-        fig_series.update_yaxes(tickfont=dict(family="IBM Plex Mono"), gridcolor=COLOR_LINEA)
+        fig_series.update_layout(height=420, legend_title_text="", font=dict(family="IBM Plex Sans", color=COLOR_INK), paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_SURFACE)
+        fig_series.update_xaxes(range=[anio_min_serie - 0.5, anio_max_serie + 0.5], tickfont=dict(family="IBM Plex Mono", color=COLOR_INK_SOFT), gridcolor=COLOR_LINEA, linecolor=COLOR_SURFACE_ALT)
+        fig_series.update_yaxes(tickfont=dict(family="IBM Plex Mono", color=COLOR_INK_SOFT), gridcolor=COLOR_LINEA, linecolor=COLOR_SURFACE_ALT)
         st.plotly_chart(fig_series, use_container_width=True)
 else:
     st.info("Selecciona uno o más departamentos en la barra lateral para ver su evolución.")
@@ -287,8 +298,8 @@ if not datos_scatter.empty:
         hover_name="departamento",
         size_max=12,
         color_discrete_map={
-            "Costa": COLOR_ACHIOTE, "Sierra": COLOR_VERDE_ALTURA,
-            "Selva": "#3E7C5A", "Lima Metropolitana": COLOR_COCHINILLA,
+            "Costa": COLOR_ACCENT, "Sierra": COLOR_INK,
+            "Selva": "#C9799F", "Lima Metropolitana": "#F0C4DA",
         },
         labels={
             "ingreso_laboral_soles": "Ingreso laboral promedio (S/)",
@@ -296,10 +307,10 @@ if not datos_scatter.empty:
             "region_natural": "Región natural",
         },
     )
-    fig_scatter.update_traces(marker=dict(size=11, line=dict(width=0.5, color="white")))
-    fig_scatter.update_layout(height=440, legend_title_text="Región natural", font_family="IBM Plex Sans", paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_SURFACE)
-    fig_scatter.update_xaxes(tickfont=dict(family="IBM Plex Mono"), gridcolor=COLOR_LINEA)
-    fig_scatter.update_yaxes(tickfont=dict(family="IBM Plex Mono"), gridcolor=COLOR_LINEA)
+    fig_scatter.update_traces(marker=dict(size=11, line=dict(width=0.5, color=COLOR_INK)))
+    fig_scatter.update_layout(height=440, legend_title_text="Región natural", font=dict(family="IBM Plex Sans", color=COLOR_INK), paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_SURFACE)
+    fig_scatter.update_xaxes(tickfont=dict(family="IBM Plex Mono", color=COLOR_INK_SOFT), gridcolor=COLOR_LINEA, linecolor=COLOR_SURFACE_ALT)
+    fig_scatter.update_yaxes(tickfont=dict(family="IBM Plex Mono", color=COLOR_INK_SOFT), gridcolor=COLOR_LINEA, linecolor=COLOR_SURFACE_ALT)
     st.plotly_chart(fig_scatter, use_container_width=True)
 else:
     st.info(f"No hay suficientes datos para graficar {anio_sel}.")
