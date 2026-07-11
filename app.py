@@ -123,17 +123,27 @@ else:
 st.subheader("Evolución en el tiempo")
 
 if deptos_sel:
-    df_series = df[df["departamento"].isin(deptos_sel)].sort_values("anio")
-    fig_series = px.line(
-        df_series,
-        x="anio",
-        y=metrica_col,
-        color="departamento",
-        markers=True,
-        labels={metrica_col: metrica_label, "anio": "Año", "departamento": "Departamento"},
-    )
-    fig_series.update_layout(height=420, legend_title_text="")
-    st.plotly_chart(fig_series, use_container_width=True)
+    df_series = df[df["departamento"].isin(deptos_sel)].dropna(subset=[metrica_col]).sort_values("anio")
+    if df_series.empty:
+        st.info(f"'{metrica_label}' no tiene datos disponibles para los departamentos elegidos.")
+    else:
+        anio_min_serie, anio_max_serie = int(df_series["anio"].min()), int(df_series["anio"].max())
+        if anio_min_serie > min(anios_disponibles):
+            st.caption(
+                f"ℹ️ '{metrica_label}' solo tiene datos desde {anio_min_serie} en adelante "
+                f"(la fuente del INEI no publica esa cifra en años anteriores)."
+            )
+        fig_series = px.line(
+            df_series,
+            x="anio",
+            y=metrica_col,
+            color="departamento",
+            markers=True,
+            labels={metrica_col: metrica_label, "anio": "Año", "departamento": "Departamento"},
+        )
+        fig_series.update_layout(height=420, legend_title_text="")
+        fig_series.update_xaxes(range=[anio_min_serie - 0.5, anio_max_serie + 0.5])
+        st.plotly_chart(fig_series, use_container_width=True)
 else:
     st.info("Selecciona uno o más departamentos en la barra lateral para ver su evolución.")
 
