@@ -13,6 +13,113 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------------------------
+# DISEÑO — "cuaderno de campo estadístico andino"
+# ---------------------------------------------------------------------------
+COLOR_BG = "#FAF8F3"
+COLOR_SURFACE = "#FFFFFF"
+COLOR_INK = "#2B2320"
+COLOR_INK_SOFT = "#6B5F55"
+COLOR_COCHINILLA = "#A23B2E"   # acento principal / negativo
+COLOR_VERDE_ALTURA = "#1F5C4F"  # positivo
+COLOR_ACHIOTE = "#C97A2B"      # terciario
+COLOR_LINEA = "#E4DACB"
+
+ESCALA_ROJO_VERDE = [
+    [0.0, COLOR_COCHINILLA], [0.5, "#F4E9C9"], [1.0, COLOR_VERDE_ALTURA]
+]
+ESCALA_SOLO_ROJO = [
+    [0.0, "#F4E9C9"], [1.0, COLOR_COCHINILLA]
+]
+
+st.markdown(f"""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+html, body, [class*="css"] {{
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: {COLOR_INK};
+}}
+.stApp {{
+    background-color: {COLOR_BG};
+}}
+[data-testid="stSidebar"] {{
+    background-color: {COLOR_SURFACE};
+    border-right: 1px solid {COLOR_LINEA};
+}}
+h1, h2, h3 {{
+    font-family: 'Fraunces', serif !important;
+    font-weight: 600 !important;
+    color: {COLOR_INK} !important;
+    letter-spacing: -0.01em;
+}}
+.faja {{
+    height: 8px;
+    width: 100%;
+    margin: -1rem 0 1.75rem 0;
+    background: repeating-linear-gradient(
+        90deg,
+        {COLOR_COCHINILLA} 0px, {COLOR_COCHINILLA} 28px,
+        {COLOR_ACHIOTE} 28px, {COLOR_ACHIOTE} 48px,
+        {COLOR_VERDE_ALTURA} 48px, {COLOR_VERDE_ALTURA} 68px,
+        {COLOR_INK} 68px, {COLOR_INK} 72px
+    );
+    border-radius: 2px;
+}}
+.kpi-card {{
+    background: {COLOR_SURFACE};
+    border: 1px solid {COLOR_LINEA};
+    border-left: 3px solid {COLOR_COCHINILLA};
+    border-radius: 6px;
+    padding: 0.9rem 1.1rem;
+    height: 100%;
+}}
+.kpi-card.positivo {{ border-left-color: {COLOR_VERDE_ALTURA}; }}
+.kpi-label {{
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: {COLOR_INK_SOFT};
+    margin-bottom: 0.3rem;
+}}
+.kpi-value {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: {COLOR_INK};
+    line-height: 1.15;
+}}
+.kpi-sub {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: {COLOR_INK_SOFT};
+    margin-top: 0.15rem;
+}}
+[data-testid="stMetricValue"], .stDataFrame, .stDataFrame * {{
+    font-family: 'IBM Plex Mono', monospace !important;
+}}
+.stButton>button, .stDownloadButton>button {{
+    background-color: {COLOR_COCHINILLA};
+    color: white;
+    border: none;
+}}
+hr {{ border-color: {COLOR_LINEA} !important; }}
+</style>
+""", unsafe_allow_html=True)
+
+
+def kpi_card(label, value, sub="", positivo=False):
+    clase = "kpi-card positivo" if positivo else "kpi-card"
+    st.markdown(
+        f"""<div class="{clase}">
+                <div class="kpi-label">{label}</div>
+                <div class="kpi-value">{value}</div>
+                <div class="kpi-sub">{sub}</div>
+            </div>""",
+        unsafe_allow_html=True,
+    )
+
+# ---------------------------------------------------------------------------
 # CARGA DE DATOS
 # ---------------------------------------------------------------------------
 @st.cache_data
@@ -68,6 +175,7 @@ st.sidebar.caption(
 # TÍTULO Y KPIs
 # ---------------------------------------------------------------------------
 st.title("Pobreza y costo de vida real por región del Perú")
+st.markdown('<div class="faja"></div>', unsafe_allow_html=True)
 st.caption(
     "Cruce entre pobreza monetaria e ingreso laboral por departamento (SIRTOD-INEI) "
     "y línea de pobreza / gasto real por región natural (Informe Técnico INEI, "
@@ -80,10 +188,14 @@ col1, col2, col3, col4 = st.columns(4)
 if not datos_anio.empty:
     peor = datos_anio.loc[datos_anio[metrica_col].idxmax() if metrica_col in ESCALAS_INVERTIDAS else datos_anio[metrica_col].idxmin()]
     mejor = datos_anio.loc[datos_anio[metrica_col].idxmin() if metrica_col in ESCALAS_INVERTIDAS else datos_anio[metrica_col].idxmax()]
-    col1.metric("Promedio nacional", f"{datos_anio[metrica_col].mean():,.1f}")
-    col2.metric("Departamento con peor situación", peor["departamento"].title(), f"{peor[metrica_col]:,.1f}")
-    col3.metric("Departamento con mejor situación", mejor["departamento"].title(), f"{mejor[metrica_col]:,.1f}")
-    col4.metric("Departamentos con dato", f"{datos_anio.shape[0]} / 25")
+    with col1:
+        kpi_card("Promedio nacional", f"{datos_anio[metrica_col].mean():,.1f}")
+    with col2:
+        kpi_card("Peor situación", peor["departamento"].title(), f"{peor[metrica_col]:,.1f}")
+    with col3:
+        kpi_card("Mejor situación", mejor["departamento"].title(), f"{mejor[metrica_col]:,.1f}", positivo=True)
+    with col4:
+        kpi_card("Departamentos con dato", f"{datos_anio.shape[0]} / 25")
 else:
     st.warning(f"No hay datos de '{metrica_label}' para el año {anio_sel}.")
 
@@ -93,7 +205,7 @@ else:
 st.subheader(f"{metrica_label} — {anio_sel}")
 
 if not datos_anio.empty:
-    escala = "Reds" if metrica_col in ESCALAS_INVERTIDAS else "RdYlGn"
+    escala = ESCALA_SOLO_ROJO if metrica_col in ESCALAS_INVERTIDAS else ESCALA_ROJO_VERDE
     fig_mapa = px.choropleth(
         datos_anio,
         geojson=geojson,
@@ -112,7 +224,10 @@ if not datos_anio.empty:
         labels={metrica_col: metrica_label},
     )
     fig_mapa.update_geos(fitbounds="locations", visible=False)
-    fig_mapa.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=520)
+    fig_mapa.update_layout(
+        margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=520,
+        font_family="IBM Plex Sans", paper_bgcolor=COLOR_BG,
+    )
     st.plotly_chart(fig_mapa, use_container_width=True)
 else:
     st.info("Prueba con otro año o indicador.")
@@ -139,9 +254,10 @@ if deptos_sel:
             y=metrica_col,
             color="departamento",
             markers=True,
+            color_discrete_sequence=[COLOR_COCHINILLA, COLOR_VERDE_ALTURA, COLOR_ACHIOTE, COLOR_INK, "#7A8C8A"],
             labels={metrica_col: metrica_label, "anio": "Año", "departamento": "Departamento"},
         )
-        fig_series.update_layout(height=420, legend_title_text="")
+        fig_series.update_layout(height=420, legend_title_text="", font_family="IBM Plex Sans", paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_SURFACE)
         fig_series.update_xaxes(range=[anio_min_serie - 0.5, anio_max_serie + 0.5])
         st.plotly_chart(fig_series, use_container_width=True)
 else:
@@ -161,6 +277,10 @@ if not datos_scatter.empty:
         color="region_natural",
         hover_name="departamento",
         size_max=12,
+        color_discrete_map={
+            "Costa": COLOR_ACHIOTE, "Sierra": COLOR_VERDE_ALTURA,
+            "Selva": "#3E7C5A", "Lima Metropolitana": COLOR_COCHINILLA,
+        },
         labels={
             "ingreso_laboral_soles": "Ingreso laboral promedio (S/)",
             "pobreza_total_pct": "Pobreza total (%)",
@@ -168,7 +288,7 @@ if not datos_scatter.empty:
         },
     )
     fig_scatter.update_traces(marker=dict(size=11, line=dict(width=0.5, color="white")))
-    fig_scatter.update_layout(height=440, legend_title_text="Región natural")
+    fig_scatter.update_layout(height=440, legend_title_text="Región natural", font_family="IBM Plex Sans", paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_SURFACE)
     st.plotly_chart(fig_scatter, use_container_width=True)
 else:
     st.info(f"No hay suficientes datos para graficar {anio_sel}.")
